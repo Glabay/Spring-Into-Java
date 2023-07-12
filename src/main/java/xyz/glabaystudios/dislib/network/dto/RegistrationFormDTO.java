@@ -12,4 +12,5 @@ public class RegistrationFormDTO {
     private String firstName;
     private String lastName;
     private String password;
+    private Long discordUserId;
 }

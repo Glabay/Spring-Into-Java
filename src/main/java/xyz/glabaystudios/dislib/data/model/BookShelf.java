@@ -19,6 +19,7 @@ public class BookShelf {
     private String createdOn;
     private String updatedOn;
 
+    private Long shelfId;
     private Long ownerDiscordId;
     private String shelfName;
     private String shelfDescription;

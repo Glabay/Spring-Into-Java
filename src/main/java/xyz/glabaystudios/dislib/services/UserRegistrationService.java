@@ -36,6 +36,7 @@ public class UserRegistrationService {
         newUser.setFirstName(dto.getFirstName());
         newUser.setLastName(dto.getLastName());
         newUser.setPassword(new BCryptPasswordEncoder().encode(dto.getPassword()));
+        newUser.setDiscordUserId(dto.getDiscordUserId());
 
         registeredUserRepository.save(newUser);
     }

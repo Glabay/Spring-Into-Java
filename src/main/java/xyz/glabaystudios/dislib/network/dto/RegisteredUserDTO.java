@@ -11,4 +11,5 @@ public class RegisteredUserDTO {
     private String email;
     private String firstName;
     private String lastName;
+    private Long discordUserId;
 }
