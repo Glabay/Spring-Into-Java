@@ -1,0 +1,41 @@
+package xyz.glabaystudios.dislib.network.controllers;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import xyz.glabaystudios.dislib.data.dto.BookDTO;
+import xyz.glabaystudios.dislib.services.BookService;
+import xyz.glabaystudios.dislib.services.HttpService;
+
+import java.util.Objects;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/book")
+public class BookController {
+    private final BookService bookService;
+    private final HttpService httpService;
+
+    @PostMapping("/add/isbn/{isbn}")
+    private ResponseEntity<String> handleAddingBookByISBN(@PathVariable Long isbn) {
+        if (Objects.isNull(isbn))
+            return new ResponseEntity<>("No content provided.", HttpStatus.NO_CONTENT);
+        if (isbn.toString().length() < 10 || isbn.toString().length() > 13)
+            return new ResponseEntity<>("ISBN mismatch", HttpStatus.NOT_ACCEPTABLE);
+
+        BookDTO book = null;
+        if (isbn.toString().length() == 10) book = bookService.getBookDtoForIsbn10(isbn);
+        if (Objects.isNull(book) && isbn.toString().length() == 13) book = bookService.getBookDtoForIsbn13(isbn);
+        if (Objects.isNull(book)) {
+            var response = httpService.submitHttpGet(isbn, httpService.getHttpClient());
+            if (Objects.nonNull(response))
+                    return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+        }
+        return new ResponseEntity<>("Book is already within our library", HttpStatus.OK);
+    }
+}

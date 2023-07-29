@@ -3,7 +3,6 @@ package xyz.glabaystudios.dislib.network.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +13,6 @@ import xyz.glabaystudios.dislib.services.UserRegistrationService;
 import java.util.Objects;
 
 @RequiredArgsConstructor
-@Controller
 @RestController
 @RequestMapping("/api/v1/registry")
 public class UserRegistrationController {
