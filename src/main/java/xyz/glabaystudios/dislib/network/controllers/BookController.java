@@ -31,9 +31,15 @@ public class BookController {
         if (isbn.toString().length() == 10) book = bookService.getBookDtoForIsbn10(isbn);
         if (Objects.isNull(book) && isbn.toString().length() == 13) book = bookService.getBookDtoForIsbn13(isbn);
         if (Objects.isNull(book)) {
-            var response = httpService.submitHttpGet(isbn, httpService.getHttpClient());
-            if (Objects.nonNull(response))
-                    return new ResponseEntity<>(response, HttpStatus.CREATED);
+            var response = httpService.submitHttpGet("isbn", isbn.toString(), httpService.getHttpClient());
+            if (Objects.nonNull(response)) {
+                BookDTO newBook = bookService.parseBookDataObject(response);
+                if (Objects.nonNull(newBook)) {
+                    bookService.updateBook(newBook);
+                    return new ResponseEntity<>(newBook.toString(), HttpStatus.CREATED);
+                } else
+                    return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+            }
 
         }
         return new ResponseEntity<>("Book is already within our library", HttpStatus.OK);

@@ -11,16 +11,16 @@ import java.io.IOException;
 
 @Service
 public class HttpService {
-    String getOpenLibraryApi(Long isbn) {
-        return "https://openlibrary.org/isbn/%d.json".formatted(isbn);
+    String getOpenLibraryApi(String api, String key) {
+        return "https://openlibrary.org/%s/%s.json".formatted(api, key);
     }
     public CloseableHttpClient getHttpClient() {
         return HttpClientBuilder.create().build();
     }
 
-    private HttpResponse fetchHttpGetResponse(Long isbn, CloseableHttpClient httpClient) {
+    private HttpResponse fetchHttpGetResponse(String api, String key, CloseableHttpClient httpClient) {
         try (httpClient) {
-            HttpGet httpGet = new HttpGet(getOpenLibraryApi(isbn));
+            HttpGet httpGet = new HttpGet(getOpenLibraryApi(api, key));
             httpGet.setHeader("Accept", "application/json");
             httpGet.setHeader("Content-type", "application/json");
             return httpClient.execute(httpGet);
@@ -29,9 +29,9 @@ public class HttpService {
         }
     }
 
-    public String submitHttpGet(Long isbn, CloseableHttpClient httpClient) {
+    public String submitHttpGet(String api, String key, CloseableHttpClient httpClient) {
         try (httpClient) {
-            HttpResponse response = fetchHttpGetResponse(isbn, httpClient);
+            HttpResponse response = fetchHttpGetResponse(api, key, httpClient);
             return EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (IOException e) {
             throw new RuntimeException(e);

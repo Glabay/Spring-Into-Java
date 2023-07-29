@@ -1,6 +1,10 @@
 package xyz.glabaystudios.dislib.services;
 
 import lombok.RequiredArgsConstructor;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 import xyz.glabaystudios.dislib.data.dto.BookDTO;
 import xyz.glabaystudios.dislib.data.model.Book;
@@ -14,6 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookService implements DateTimeUtils {
     private final BookRepository bookRepository;
+    private final HttpService httpService;
 
     public void save(Book book) {
         bookRepository.save(book);
@@ -49,6 +54,67 @@ public class BookService implements DateTimeUtils {
 
     public List<BookDTO> findAll() {
         return bookRepository.findAll().stream().map(this::convertObjectToDTO).collect(Collectors.toList());
+    }
+
+    public BookDTO parseBookDataObject(String data) {
+        System.out.println(data);
+        BookDTO dto = new BookDTO();
+        try {
+            // Parse the inti data
+            Object object = new JSONParser().parse(data);
+            JSONObject bookData = (JSONObject) object;
+            dto.setTitle(bookData.get("title").toString());
+            dto.setDescription(bookData.get("subtitle").toString());
+
+            // Parse Publisher
+            Object publisherData = new JSONParser().parse(bookData.get("publishers").toString());
+            JSONArray publishersArray = (JSONArray) publisherData;
+            dto.setPublisher(publishersArray.get(0).toString());
+
+            // Parse isbn13
+            Object isbn13Data = new JSONParser().parse(bookData.get("isbn_13").toString());
+            JSONArray isbn13Array = (JSONArray) isbn13Data;
+            dto.setISBN13(Long.parseLong(isbn13Array.get(0).toString()));
+
+            // Parse Author
+            Object authorData = new JSONParser().parse(bookData.get("authors").toString());
+            JSONArray authorArray = (JSONArray) authorData;
+            Object authorObject = new JSONParser().parse(authorArray.get(0).toString());
+            JSONObject authorJson = (JSONObject) authorObject;
+            String[] authorsData = authorJson.get("key").toString().split("/");
+            var author = fetchAuthor(authorsData[1], authorsData[2]);
+            dto.setAuthor(author);
+
+            // Parse book details
+            String[] bookDetails = bookData.get("key").toString().split("/");
+            var publishedDate = fetchPublishedDate(bookDetails[1], bookDetails[2]);
+            dto.setPublishedDate(publishedDate);
+
+        } catch(ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return dto;
+    }
+    private String fetchPublishedDate(String api, String key) {
+        var response = httpService.submitHttpGet(api, key, httpService.getHttpClient());
+        try {
+            Object object = new JSONParser().parse(response);
+            JSONObject jsonObject = (JSONObject) object;
+            return jsonObject.get("publish_date").toString();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String fetchAuthor(String api, String key) {
+        var response = httpService.submitHttpGet(api, key, httpService.getHttpClient());
+        try {
+            Object object = new JSONParser().parse(response);
+            JSONObject jsonObject = (JSONObject) object;
+            return jsonObject.get("name").toString();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Book updateBookObject(Book model, BookDTO dto) {
