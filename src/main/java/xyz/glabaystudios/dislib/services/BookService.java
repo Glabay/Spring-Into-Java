@@ -12,6 +12,7 @@ import xyz.glabaystudios.dislib.data.repos.BookRepository;
 import xyz.glabaystudios.dislib.util.DateTimeUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,7 +65,10 @@ public class BookService implements DateTimeUtils {
             Object object = new JSONParser().parse(data);
             JSONObject bookData = (JSONObject) object;
             dto.setTitle(bookData.get("title").toString());
-            dto.setDescription(bookData.get("subtitle").toString());
+            if (Objects.nonNull(bookData.get("subtitle")))
+                dto.setDescription(bookData.get("subtitle").toString());
+            else if (Objects.nonNull(bookData.get("first_sentence")))
+                dto.setDescription(bookData.get("first_sentence").toString());
 
             // Parse Publisher
             Object publisherData = new JSONParser().parse(bookData.get("publishers").toString());
@@ -132,7 +136,7 @@ public class BookService implements DateTimeUtils {
         return model;
     }
 
-    private Book createNewBookObject(BookDTO dto) {
+    public Book createNewBookObject(BookDTO dto) {
         Book newBook = new Book();
         newBook.setTitle(dto.getTitle());
         newBook.setAuthor(dto.getAuthor());

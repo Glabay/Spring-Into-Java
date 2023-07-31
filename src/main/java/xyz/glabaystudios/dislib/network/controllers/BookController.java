@@ -21,11 +21,11 @@ public class BookController {
     private final HttpService httpService;
 
     @PostMapping("/add/isbn/{isbn}")
-    private ResponseEntity<String> handleAddingBookByISBN(@PathVariable Long isbn) {
+    private ResponseEntity<BookDTO> handleAddingBookByISBN(@PathVariable Long isbn) {
         if (Objects.isNull(isbn))
-            return new ResponseEntity<>("No content provided.", HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         if (isbn.toString().length() < 10 || isbn.toString().length() > 13)
-            return new ResponseEntity<>("ISBN mismatch", HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 
         BookDTO book = null;
         if (isbn.toString().length() == 10) book = bookService.getBookDtoForIsbn10(isbn);
@@ -35,13 +35,14 @@ public class BookController {
             if (Objects.nonNull(response)) {
                 BookDTO newBook = bookService.parseBookDataObject(response);
                 if (Objects.nonNull(newBook)) {
-                    bookService.updateBook(newBook);
-                    return new ResponseEntity<>(newBook.toString(), HttpStatus.CREATED);
+                    var newBookObject = bookService.createNewBookObject(newBook);
+                    bookService.save(newBookObject);
+                    return new ResponseEntity<>(newBook, HttpStatus.CREATED);
                 } else
-                    return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
         }
-        return new ResponseEntity<>("Book is already within our library", HttpStatus.OK);
+        return new ResponseEntity<>(book, HttpStatus.OK);
     }
 }
