@@ -8,20 +8,34 @@ import xyz.glabaystudios.dislib.data.model.BookShelf;
 import xyz.glabaystudios.dislib.data.repos.BookShelfRepository;
 import xyz.glabaystudios.dislib.util.DateTimeUtils;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class BookShelfService implements DateTimeUtils {
     private final BookShelfRepository bookShelfRepository;
     private final BookService bookService;
 
-    public BookShelfDTO getBookShelfForUser(Long discordId) {
+    public List<BookShelfDTO> getBookShelvesForUser(Long discordId) {
         var bookShelf = bookShelfRepository.findByOwnerDiscordId(discordId);
-        if (bookShelf.isPresent()) {
-            BookShelfDTO shelf = convertObjectToDTO(bookShelf.get());
-            shelf.getBooks().addAll(bookService.findAllForShelfIdForUser(shelf.getShelfId(), shelf.getOwnerDiscordId()));
-            return shelf;
+        if (Objects.nonNull(bookShelf)) {
+            return bookShelf.stream()
+                    .filter(Objects::nonNull)
+                    .map(this::convertObjectToDTO)
+                    .collect(Collectors.toList());
         }
         return null;
+    }
+
+    public BookShelf getBookshelfForId(Long shelfId) {
+        var shelf = bookShelfRepository.findByShelfId(shelfId);
+        return shelf.orElse(null);
+    }
+
+    public void saveShelf(BookShelf model) {
+        bookShelfRepository.save(model);
     }
 
     public void addBookToShelf(BookShelfDTO shelf, BookDTO book) {
